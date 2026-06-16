@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import AppShell from '../components/AppShell';
-import { PLANS, checkoutUrl } from '../../lib/pricing';
+import { PLANS } from '../../lib/pricing';
 
 function fmtPrice(symbol, amount) {
   if (!amount) return 'Free';
