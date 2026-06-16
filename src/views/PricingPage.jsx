@@ -28,13 +28,10 @@ export default function PricingPage() {
 
   const startCheckout = (planId) => {
     if (planId === 'free') { window.location.href = user ? '/' : '/sign-in'; return; }
-    window.location.href = checkoutUrl({
-      plan: planId,
-      currency: pricing?.currency || 'USD',
-      amount: prices[planId],
-      uid: user?.id,
-      returnUrl: `${window.location.origin}/settings`,
-    });
+    if (!user) { window.location.href = '/sign-in'; return; }
+    // Server route signs the handoff token (region price + buyer) and redirects
+    // to Elixpo Pay's hosted checkout.
+    window.location.href = `/api/checkout?plan=${encodeURIComponent(planId)}`;
   };
 
   return (
