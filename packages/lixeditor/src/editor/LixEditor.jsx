@@ -399,6 +399,21 @@ const LixEditor = forwardRef(function LixEditor({
       });
     }
 
+    if (f.buttons) {
+      custom.push({
+        title: 'Button',
+        subtext: 'Call-to-action button (email-safe export)',
+        group: 'Basic',
+        aliases: ['button', 'cta', 'link button'],
+        icon: <span style={{ fontSize: 14 }}>▭</span>,
+        onItemClick: () => editor.insertBlocks(
+          [{ type: 'buttonBlock', props: { ...(buttonDefaults || {}) } }],
+          editor.getTextCursorPosition().block,
+          'after',
+        ),
+      });
+    }
+
     const all = [...defaults, ...custom, ...extraSlashItems];
     const filtered = filterSuggestionItems(all, query);
 
@@ -417,7 +432,7 @@ const LixEditor = forwardRef(function LixEditor({
       .map((item, i) => ({ item, i, gIdx: groupOrder.get(item.group ?? '') }))
       .sort((a, b) => a.gIdx - b.gIdx || a.i - b.i)
       .map((x) => x.item);
-  }, [editor, f, extraSlashItems]);
+  }, [editor, f, extraSlashItems, buttonDefaults]);
 
   const handleChange = useCallback(() => {
     if (onChange) onChange(editor);
@@ -465,6 +480,7 @@ const LixEditor = forwardRef(function LixEditor({
         />
       )}
     </div>
+    </LixUploadContext.Provider>
   );
 });
 
