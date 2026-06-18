@@ -33,7 +33,8 @@ import { ButtonBlock } from '../blocks/ButtonBlock';
 import { PDFEmbedBlock } from '../blocks/PDFEmbedBlock';
 
 // Utilities
-import LinkPreviewTooltip, { useLinkPreview } from './LinkPreviewTooltip';
+import LinkPreviewTooltip, { useLinkPreview, setLinkPreviewEndpoint } from './LinkPreviewTooltip';
+import { LixUploadContext } from './uploadConfig';
 
 // Default code block languages
 const DEFAULT_LANGUAGES = {
@@ -108,6 +109,15 @@ const LixEditor = forwardRef(function LixEditor({
   collaboration,
   onReady,
   children,
+  // NEW in 2.7.0
+  uploadFile,
+  acceptImageTypes,
+  maxFileSizeBytes,
+  onUploadError,
+  buttonDefaults,
+  variableSuggestions,
+  editable = true,
+  linkPreviewEndpoint,
 }, ref) {
   const { isDark } = useLixTheme();
   const wrapperRef = useRef(null);
@@ -191,6 +201,18 @@ const LixEditor = forwardRef(function LixEditor({
 
   // Notify parent when ready
   useEffect(() => { if (onReady) onReady(); }, []);
+
+  // Host-configurable link-preview endpoint (prop mirrors setLinkPreviewEndpoint).
+  useEffect(() => {
+    if (linkPreviewEndpoint) setLinkPreviewEndpoint(linkPreviewEndpoint);
+  }, [linkPreviewEndpoint]);
+
+  // Toggle editability (read-only previews).
+  useEffect(() => {
+    if (editor?.isEditable !== undefined) {
+      try { editor.isEditable = editable; } catch {}
+    }
+  }, [editor, editable]);
 
   // Auto-convert ![alt](url) to image block and [text](url) to link as you type
   useEffect(() => {

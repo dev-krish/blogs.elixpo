@@ -62,11 +62,38 @@ function ImageRenderer({ block, editor }) {
     return () => el.removeEventListener('keydown', handleKey);
   }, [editor, block.id, mode, url]);
 
-  // Upload — reads file as base64 data URL
+  // Add an image. If the host provided `uploadFile`, store the returned hosted
+  // URL (required for email — base64 is stripped by Gmail/Outlook). Otherwise
+  // fall back to a base64 data URL so the package still works with zero config.
   const uploadFile = useCallback(async (file) => {
     if (!file || !file.type.startsWith('image/')) return;
+    if (acceptImageTypes?.length && !acceptImageTypes.includes(file.type)) {
+      showFailToast('Unsupported image type');
+      return;
+    }
+    if (maxFileSizeBytes && file.size > maxFileSizeBytes) {
+      showFailToast(`Image exceeds ${Math.round(maxFileSizeBytes / 1024 / 1024)}MB limit`);
+      return;
+    }
     setMode('uploading');
-    setUploadStatus('Processing...');
+    setUploadStatus(hostUpload ? 'Uploading…' : 'Processing...');
+
+    if (hostUpload) {
+      try {
+        const resultUrl = await hostUpload(file);
+        if (!resultUrl || typeof resultUrl !== 'string') throw new Error('uploadFile did not return a URL');
+        editor.updateBlock(block.id, { props: { url: resultUrl, name: file.name } });
+        setMode('idle');
+      } catch (err) {
+        const e = err instanceof Error ? err : new Error(String(err));
+        onUploadError?.(e, file);
+        showFailToast('Upload failed');
+        setMode('idle'); // keep the block editable/empty — never insert base64 here
+      }
+      return;
+    }
+
+    // Base64 fallback (standalone / zero-config)
     try {
       const reader = new FileReader();
       reader.onload = () => {
@@ -81,7 +108,7 @@ function ImageRenderer({ block, editor }) {
     } catch {
       setMode('idle');
     }
-  }, [editor, block.id]);
+  }, [editor, block.id, hostUpload, acceptImageTypes, maxFileSizeBytes, onUploadError]);
 
   // Paste handler
   const handlePaste = useCallback((e) => {
