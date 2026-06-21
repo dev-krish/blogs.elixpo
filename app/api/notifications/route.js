@@ -55,10 +55,12 @@ export async function PUT(request) {
       await db.prepare('UPDATE notifications SET read = 1 WHERE user_id = ? AND read = 0')
         .bind(session.userId).run();
     } else if (id) {
+        const markRead = read === undefined ? true : read;
+
         await db.prepare(
           'UPDATE notifications SET read = ? WHERE id = ? AND user_id = ?'
         )
-          .bind(read ? 1 : 0, id, session.userId)
+          .bind(markRead ? 1 : 0, id, session.userId)
           .run();
       }
 
