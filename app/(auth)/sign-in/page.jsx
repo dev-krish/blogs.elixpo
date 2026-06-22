@@ -3,12 +3,10 @@
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useTheme } from '../../../src/context/ThemeContext';
 
 function SignInContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
-  const { isDark } = useTheme();
 
   function handleLogin() {
     // Server route generates the CSRF state + sets an httpOnly cookie, then redirects.
