@@ -24,7 +24,7 @@ export async function GET(request) {
       const users = await db.prepare(`
         SELECT id, username, display_name, avatar_url
         FROM users WHERE LOWER(username) LIKE ? OR LOWER(display_name) LIKE ?
-        LIMIT 5
+        LIMIT 10
       `).bind(pattern, pattern).all();
       results.users = users?.results || [];
     }

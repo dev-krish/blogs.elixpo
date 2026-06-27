@@ -1,6 +1,7 @@
 export const runtime = 'edge';
 import { NextResponse } from 'next/server';
 import { getSession } from '../../../../lib/auth';
+import { getLimits } from '../../../../lib/tiers';
 
 /**
  * Blog collaborator management.
@@ -76,6 +77,14 @@ export async function POST(request) {
     const { allowed, blog } = await canManage(db, slugid, session.userId);
     if (!allowed) return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
 
+    const owner = await db
+      .prepare('SELECT tier FROM users WHERE id = ?')
+      .bind(blog.author_id)
+      .first();
+
+    const ownerTier = owner?.tier || 'free';
+    const limits = getLimits(ownerTier);
+
     const invitee = await db.prepare('SELECT id, username FROM users WHERE LOWER(username) = LOWER(?)').bind(username).first();
     if (!invitee) return NextResponse.json({ error: 'User not found' }, { status: 404 });
     if (invitee.id === blog.author_id) return NextResponse.json({ error: 'Cannot invite the blog author' }, { status: 400 });
@@ -85,8 +94,14 @@ export async function POST(request) {
     const existing = await db.prepare('SELECT 1 FROM blog_co_authors WHERE blog_id = ? AND user_id = ?').bind(slugid, invitee.id).first();
     if (!existing) {
       const countRow = await db.prepare('SELECT COUNT(*) AS c FROM blog_co_authors WHERE blog_id = ?').bind(slugid).first();
-      if ((countRow?.c || 0) >= 10) {
-        return NextResponse.json({ error: 'A blog can have at most 10 collaborators.' }, { status: 400 });
+      if ((countRow?.c || 0) >= limits.coAuthorsPerBlog) {
+        return NextResponse.json(
+          {
+            error: `You can add up to ${limits.coAuthorsPerBlog} co-authors on the ${ownerTier} plan.`,
+            upgrade: ownerTier === "free",
+          },
+          { status: 400 }
+        );
       }
     }
 

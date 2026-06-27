@@ -68,6 +68,7 @@ export default function CollaboratorPanel({ slugid, onClose }) {
         setSearchResults([]);
         fetchCollabs();
       } else {
+        setSearchResults([]); // close the dropdown
         setInviteError(data.error || 'Failed to invite');
       }
     } catch { setInviteError('Network error'); }
@@ -166,9 +167,21 @@ export default function CollaboratorPanel({ slugid, onClose }) {
                   {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                 </select>
               </div>
-              {inviteError && <p className="text-[11px] mt-1.5" style={{ color: '#f87171' }}>{inviteError}</p>}
-            </div>
-          )}
+              {inviteError && (
+                <div
+                  className="mb-3 rounded-lg border px-3 py-2 flex items-start gap-2 mt-14"
+                  style={{
+                    background: "rgba(239,68,68,.08)",
+                    borderColor: "rgba(239,68,68,.25)",
+                    color: "#ef4444",
+                  }}
+                >
+                  <span>⚠️</span>
+                  <span>{inviteError}</span>
+                </div>
+              )}
+              </div>
+            )}
 
           {/* Divider */}
           <div style={{ height: '1px', backgroundColor: 'var(--divider)' }} />
